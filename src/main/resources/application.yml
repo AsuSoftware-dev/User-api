@@ -29,5 +29,5 @@ management:
 
 location:
   service:
-    url: ${LOCATION_API_URL:http://localhost:9093/location/}
+    url: ${LOCATION_API_URL:http://localhost:8083/location/}
 
