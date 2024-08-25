@@ -13,19 +13,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ImageUploadException.class)
     public ResponseEntity<String> handleImageUploadException(ImageUploadException ex) {
-        // Log the error if needed
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 
     @ExceptionHandler(UserCreationException.class)
     public ResponseEntity<String> handleUserCreationException(UserCreationException ex) {
-        // Log the error if needed
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 
     @ExceptionHandler(UserUpdateException.class)
     public ResponseEntity<String> handleUserUpdateException(UserUpdateException ex) {
-        // Log the error if needed
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 
@@ -44,9 +41,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + ex.getMessage());
     }
 
-    @ExceptionHandler({ImageUploadException.class, PlaceCreationException.class, PlaceUpdateException.class, FollowOperationException.class, UnfollowOperationException.class, PlaceRetrievalException.class})
+    @ExceptionHandler({PlaceCreationException.class, PlaceUpdateException.class, FollowOperationException.class, UnfollowOperationException.class, PlaceRetrievalException.class, PlaceDeletionException.class})
     public ResponseEntity<String> handleCustomExceptions(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
-
 }

@@ -29,5 +29,12 @@ management:
 
 location:
   service:
-    url: ${LOCATION_API_URL:http://localhost:9093/location/}
+    url: ${LOCATION_API_URL:http://localhost:8083/api/v1/locations}
+
+upload:
+  dir: uploads/
+
+external-link:
+  #url: "https://socialize-fe.netlify.app/images/"
+  url: "http://localhost:8081/images/"
 

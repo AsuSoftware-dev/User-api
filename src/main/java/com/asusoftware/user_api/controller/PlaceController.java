@@ -1,10 +1,13 @@
 package com.asusoftware.user_api.controller;
 
 import com.asusoftware.user_api.model.Place;
+import com.asusoftware.user_api.model.dto.CreatePlaceDto;
 import com.asusoftware.user_api.model.dto.PlaceDto;
+import com.asusoftware.user_api.model.dto.UpdatePlaceDto;
 import com.asusoftware.user_api.service.PlaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,19 +21,23 @@ public class PlaceController {
     @Autowired
     private PlaceService placeService;
 
-    @PostMapping
-    public ResponseEntity<Place> createPlace(@RequestPart("place") Place place, @RequestPart("profileImage") MultipartFile profileImage) {
-        Place createdPlace = placeService.createPlace(place, profileImage);
-        return new ResponseEntity<>(createdPlace, HttpStatus.CREATED);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PlaceDto> createPlace(
+            @RequestPart("placeDto") CreatePlaceDto placeDto,
+            @RequestPart("profileImage") MultipartFile profileImage) {
+
+        Place place = placeService.convertToEntity(placeDto);
+        Place createdPlace = placeService.createPlace(place, profileImage, placeDto.getLocation());
+        return ResponseEntity.status(HttpStatus.CREATED).body(placeService.convertToDto(createdPlace));
     }
 
+
     @PutMapping("/{placeId}")
-    public ResponseEntity<Place> updatePlace(
-            @PathVariable UUID placeId,
-            @RequestPart("place") Place updatedPlace,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
-        Place place = placeService.updatePlace(placeId, updatedPlace, profileImage);
-        return new ResponseEntity<>(place, HttpStatus.OK);
+    public ResponseEntity<PlaceDto> updatePlace(@PathVariable UUID placeId,
+                                                @RequestBody UpdatePlaceDto placeDto,
+                                                @RequestParam("profileImage") MultipartFile profileImage) {
+        Place updatedPlace = placeService.updatePlace(placeId, placeService.convertToEntity(placeDto), profileImage, placeDto.getLocation());
+        return ResponseEntity.ok(placeService.convertToDto(updatedPlace));
     }
 
     @PostMapping("/{userId}/follow/{placeId}")
@@ -43,6 +50,12 @@ public class PlaceController {
     public ResponseEntity<Void> unfollowPlace(@PathVariable UUID userId, @PathVariable UUID placeId) {
         placeService.unfollowPlace(userId, placeId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping("/{placeId}")
+    public ResponseEntity<Void> deletePlace(@PathVariable UUID placeId) {
+        placeService.deletePlace(placeId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{placeId}")

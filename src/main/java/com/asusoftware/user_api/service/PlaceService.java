@@ -6,19 +6,19 @@ import com.asusoftware.user_api.client.dto.LocationDto;
 import com.asusoftware.user_api.exception.*;
 import com.asusoftware.user_api.model.Place;
 import com.asusoftware.user_api.model.RegularUser;
-import com.asusoftware.user_api.model.dto.NotificationRequest;
-import com.asusoftware.user_api.model.dto.NotificationRequestType;
-import com.asusoftware.user_api.model.dto.PlaceDto;
+import com.asusoftware.user_api.model.Role;
+import com.asusoftware.user_api.model.dto.*;
 import com.asusoftware.user_api.repository.PlaceRepository;
 import com.asusoftware.user_api.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.UUID;
 
+@Transactional
 @Service
 public class PlaceService {
 
@@ -37,17 +37,24 @@ public class PlaceService {
     @Autowired
     private UserRepository userRepository;
 
-    public Place createPlace(Place place, MultipartFile profileImage) {
+    public Place createPlace(Place place, MultipartFile profileImage, LocationDto locationDto) {
         try {
+            // Create location in location-api and get the location ID
+            LocationDto createdLocation = locationServiceClient.createLocation(locationDto);
+            place.setLocationId(createdLocation.getId());
+
+            // Upload the image and set the image URL
             String imageUrl = imageService.uploadImage(profileImage, place.getId());
             place.setProfileImageUrl(imageUrl);
+
             return placeRepository.save(place);
         } catch (Exception e) {
-            throw new PlaceCreationException("Failed to create place", e);
+            throw new PlaceCreationException("Failed to create place. Reason: " + e.getMessage(), e);
         }
     }
 
-    public Place updatePlace(UUID placeId, Place updatedPlace, MultipartFile profileImage) {
+
+    public Place updatePlace(UUID placeId, Place updatedPlace, MultipartFile profileImage, LocationDto locationDto) {
         try {
             Place place = placeRepository.findById(placeId)
                     .orElseThrow(() -> new EntityNotFoundException("Place not found"));
@@ -57,12 +64,14 @@ public class PlaceService {
                 place.setProfileImageUrl(imageUrl);
             }
 
+            // Update location in location-api
+            LocationDto updatedLocation = locationServiceClient.updateLocation(place.getLocationId(), locationDto);
+            place.setLocationId(updatedLocation.getId());
+
             place.setFirstName(updatedPlace.getFirstName());
             place.setLastName(updatedPlace.getLastName());
             place.setContactPerson(updatedPlace.getContactPerson());
             place.setPlaceType(updatedPlace.getPlaceType());
-            place.setLocationId(updatedPlace.getLocationId());
-            // Update other fields as necessary
 
             return placeRepository.save(place);
         } catch (EntityNotFoundException e) {
@@ -71,6 +80,23 @@ public class PlaceService {
             throw new PlaceUpdateException("Failed to update place with ID " + placeId, e);
         }
     }
+
+    public void deletePlace(UUID placeId) {
+        try {
+            Place place = placeRepository.findById(placeId)
+                    .orElseThrow(() -> new EntityNotFoundException("Place not found"));
+
+            // Delete location in location-api
+            locationServiceClient.deleteLocation(place.getLocationId());
+
+            placeRepository.delete(place);
+        } catch (EntityNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PlaceDeletionException("Failed to delete place with ID " + placeId, e);
+        }
+    }
+
 
     public void followPlace(UUID userId, UUID placeId) {
         try {
@@ -178,6 +204,48 @@ public class PlaceService {
         placeDto.setContactPerson(place.getContactPerson());
         placeDto.setLocation(locationDTO);
 
+        return placeDto;
+    }
+
+
+    //////////////
+
+    public Place convertToEntity(CreatePlaceDto placeDto) {
+        Place place = new Place();
+        place.setFirstName(placeDto.getFirstName());
+        place.setLastName(placeDto.getLastName());
+        place.setEmail(placeDto.getEmail());
+        place.setPassword(placeDto.getPassword()); // TODO: cehck keycloak for this
+        place.setEnabled(placeDto.isEnabled());
+        place.setRole(Role.PLACE); // Set the role as "PLACE"
+        place.setPlaceType(placeDto.getPlaceType());
+        place.setContactPerson(placeDto.getContactPerson());
+        place.setLocationId(placeDto.getLocation().getId());
+        return place;
+    }
+
+    public Place convertToEntity(UpdatePlaceDto placeDto) {
+        Place place = new Place();
+        place.setFirstName(placeDto.getFirstName());
+        place.setLastName(placeDto.getLastName());
+        place.setEmail(placeDto.getEmail());
+        place.setPassword(placeDto.getPassword()); // TODO: cehck keycloak for this
+        place.setEnabled(placeDto.isEnabled());
+        place.setRole(Role.PLACE); // Set the role as "PLACE"
+        place.setPlaceType(placeDto.getPlaceType());
+        place.setContactPerson(placeDto.getContactPerson());
+        place.setLocationId(placeDto.getLocation().getId());
+        return place;
+    }
+
+    public PlaceDto convertToDto(Place place) {
+        PlaceDto placeDto = new PlaceDto();
+        placeDto.setId(place.getId());
+        placeDto.setName(place.getFirstName() + " " + place.getLastName());
+        placeDto.setProfileImageUrl(place.getProfileImageUrl());
+        placeDto.setPlaceType(place.getPlaceType());
+        placeDto.setContactPerson(place.getContactPerson());
+        placeDto.setLocation(locationServiceClient.getLocationById(place.getLocationId()));
         return placeDto;
     }
 

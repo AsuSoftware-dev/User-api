@@ -12,5 +12,5 @@ import java.util.UUID;
 @Repository
 public interface PlaceRepository extends JpaRepository<Place, UUID> {
     List<Place> findByPlaceType(PlaceType placeType);
-    List<Place> findByLocation(LocationDto location);
+    //List<Place> findByLocation(LocationDto location);
 }
