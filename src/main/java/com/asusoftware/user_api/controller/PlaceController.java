@@ -4,6 +4,8 @@ import com.asusoftware.user_api.model.Place;
 import com.asusoftware.user_api.model.dto.CreatePlaceDto;
 import com.asusoftware.user_api.model.dto.PlaceDto;
 import com.asusoftware.user_api.model.dto.UpdatePlaceDto;
+import com.asusoftware.user_api.model.dto.UserDto;
+import com.asusoftware.user_api.service.KeycloakService;
 import com.asusoftware.user_api.service.PlaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -13,6 +13,4 @@ public class RegularUser extends User {
     @Column(name = "subscription_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private SubscriptionType subscriptionType = SubscriptionType.FREE;
-
-    // Alte câmpuri specifice pentru utilizatorii obișnuiți, dacă este cazul
 }

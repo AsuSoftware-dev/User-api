@@ -37,6 +37,10 @@ public class PlaceService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private KeycloakService keycloakService;
+
+    @Transactional  // Asigură că toate operațiunile sunt într-o singură tranzacție
     public Place createPlace(Place place, MultipartFile profileImage, LocationDto locationDto) {
         try {
             // Create location in location-api and get the location ID
@@ -47,7 +51,14 @@ public class PlaceService {
             String imageUrl = imageService.uploadImage(profileImage, place.getId());
             place.setProfileImageUrl(imageUrl);
 
-            return placeRepository.save(place);
+            // Salvează Place-ul în baza de date
+            Place savedPlace = placeRepository.save(place);
+
+            // Sincronizează Place-ul cu Keycloak
+            keycloakService.createUserInKeycloak(UserDto.toDto(savedPlace));
+
+            return savedPlace;
+
         } catch (Exception e) {
             throw new PlaceCreationException("Failed to create place. Reason: " + e.getMessage(), e);
         }

@@ -2,11 +2,16 @@ package com.asusoftware.user_api.controller;
 
 import com.asusoftware.user_api.model.RegularUser;
 import com.asusoftware.user_api.model.User;
+import com.asusoftware.user_api.model.dto.LoginRequest;
+import com.asusoftware.user_api.model.dto.UserDto;
+import com.asusoftware.user_api.service.KeycloakService;
 import com.asusoftware.user_api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -23,6 +28,39 @@ public class UserController {
     public ResponseEntity<RegularUser> createUser(@RequestPart("user") RegularUser user, @RequestPart("profileImage") MultipartFile profileImage) {
         RegularUser createdUser = userService.createUser(user, profileImage);
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("client_id", "gateway-client");
+        map.add("username", loginRequest.getEmail());
+        map.add("password", loginRequest.getPassword());
+        map.add("grant_type", "password");
+        map.add("client_secret", "6TXH8DVp3EmdFS3SfsLBWTTV8riSV8Vl");
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "http://localhost:8080/realms/master/protocol/openid-connect/token",
+                request,
+                String.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            return ResponseEntity.ok(response.getBody());
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid login");
+        }
+    }
+
+    @GetMapping("/findAll")
+    public ResponseEntity<List<RegularUser>> findAllUsers() {
+        return new ResponseEntity<>(userService.findUsers(), HttpStatus.OK);
     }
 
     @PutMapping("/{userId}")

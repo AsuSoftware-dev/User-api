@@ -38,3 +38,10 @@ external-link:
   #url: "https://socialize-fe.netlify.app/images/"
   url: "http://localhost:8081/images/"
 
+keycloak:
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+  realm: ${KEYCLOAK_REALM:master}
+  client-id: ${KEYCLOAK_CLIENT_ID:gateway-client}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:6TXH8DVp3EmdFS3SfsLBWTTV8riSV8Vl}
+  username: ${KEYCLOAK_USERNAME:admin}
+  password: ${KEYCLOAK_PASSWORD:admin}
