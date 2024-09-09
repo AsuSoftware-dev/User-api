@@ -54,7 +54,7 @@ public class UserController {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                serverUrl + "/realms/master/protocol/openid-connect/token",
+                serverUrl + "/realms/" + realm + "/protocol/openid-connect/token",
                 request,
                 String.class);
 
