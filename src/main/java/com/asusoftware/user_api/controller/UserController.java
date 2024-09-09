@@ -7,6 +7,7 @@ import com.asusoftware.user_api.model.dto.UserDto;
 import com.asusoftware.user_api.service.KeycloakService;
 import com.asusoftware.user_api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -23,6 +24,12 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Value("${keycloak.server-url}")
+    private String serverUrl;
+
+    @Value("${keycloak.realm}")
+    private String realm;
 
     @PostMapping
     public ResponseEntity<RegularUser> createUser(@RequestPart("user") RegularUser user, @RequestPart("profileImage") MultipartFile profileImage) {
@@ -47,7 +54,7 @@ public class UserController {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "http://localhost:8080/realms/master/protocol/openid-connect/token",
+                serverUrl + "/realms/master/protocol/openid-connect/token",
                 request,
                 String.class);
 
