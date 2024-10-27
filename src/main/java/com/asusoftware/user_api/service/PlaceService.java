@@ -16,7 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -75,12 +77,15 @@ public class PlaceService {
                 place.setProfileImageUrl(imageUrl);
             }
 
-            // Update location in location-api
-            LocationDto updatedLocation = locationServiceClient.updateLocation(place.getLocationId(), locationDto);
-            place.setLocationId(updatedLocation.getId());
+            if(locationDto != null) {
+                // Update location in location-api
+                LocationDto updatedLocation = locationServiceClient.updateLocation(place.getLocationId(), locationDto);
+                place.setLocationId(updatedLocation.getId());
+            }
 
             place.setFirstName(updatedPlace.getFirstName());
             place.setLastName(updatedPlace.getLastName());
+            place.setEmail(updatedPlace.getEmail());
             place.setContactPerson(updatedPlace.getContactPerson());
             place.setPlaceType(updatedPlace.getPlaceType());
 
@@ -209,7 +214,8 @@ public class PlaceService {
         LocationDto locationDTO = locationServiceClient.getLocationById(place.getLocationId());
         PlaceDto placeDto = new PlaceDto();
         placeDto.setId(place.getId());
-        placeDto.setName(place.getFirstName() + place.getLastName()); // presupunând că firstName e numele locului
+        placeDto.setFirstName(place.getFirstName());
+        placeDto.setLastName(place.getLastName());
         placeDto.setProfileImageUrl(place.getProfileImageUrl());
         placeDto.setPlaceType(place.getPlaceType());
         placeDto.setContactPerson(place.getContactPerson());
@@ -252,7 +258,8 @@ public class PlaceService {
     public PlaceDto convertToDto(Place place) {
         PlaceDto placeDto = new PlaceDto();
         placeDto.setId(place.getId());
-        placeDto.setName(place.getFirstName() + " " + place.getLastName());
+        placeDto.setFirstName(place.getFirstName());
+        placeDto.setLastName(place.getLastName());
         placeDto.setProfileImageUrl(place.getProfileImageUrl());
         placeDto.setPlaceType(place.getPlaceType());
         placeDto.setContactPerson(place.getContactPerson());
@@ -260,5 +267,20 @@ public class PlaceService {
         return placeDto;
     }
 
+    public PlaceDto convertPlaceDtoToDto(Place place) {
+        PlaceDto placeDto = new PlaceDto();
+        placeDto.setId(place.getId());
+        placeDto.setFirstName(place.getFirstName());
+        placeDto.setLastName(place.getLastName());
+        placeDto.setProfileImageUrl(place.getProfileImageUrl());
+        placeDto.setPlaceType(place.getPlaceType());
+        placeDto.setContactPerson(place.getContactPerson());
+        return placeDto;
+    }
+
+    public List<PlaceDto> findPlacesByLocationIds(List<UUID> locationIds) {
+        List<PlaceDto> placeDtos = placeRepository.findPlacesByLocationIds(locationIds).stream().map(place -> convertPlaceDtoToDto(place)).collect(Collectors.toList());
+        return placeDtos;
+    }
 }
 
