@@ -1,8 +1,7 @@
 # Stage 1: Construiește fișierul JAR
-FROM maven:3.8.6-openjdk-17-slim AS build
+FROM maven:3.8.4-openjdk-17 AS build
 WORKDIR /app
-COPY pom.xml ./
-COPY src ./src
+COPY . .
 RUN mvn clean package -DskipTests
 
 # Stage 2: Creează imaginea finală
